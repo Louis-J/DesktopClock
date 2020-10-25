@@ -27,6 +27,11 @@ class Ui_Frame(object):
         self.retranslateUi(Frame)
         QtCore.QMetaObject.connectSlotsByName(Frame)
 
+    def setupLcdColor(self, color):
+        palette = self.lcdNumber.palette()
+        palette.setColor(palette.ColorRole(), color)
+        self.lcdNumber.setPalette(palette)
+
     def retranslateUi(self, Frame):
         pass
 

@@ -2,13 +2,31 @@ import json
 import os
 import sys
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QWidget, QLCDNumber, QSlider, QVBoxLayout, QApplication, QWidget, QApplication, QPushButton, QMessageBox, QLabel)
+from PyQt5.QtWidgets import (QWidget, QLCDNumber, QSlider, QVBoxLayout, QApplication, QWidget, QApplication, QPushButton, QMessageBox, QLabel, QDialog, QColorDialog)
+from PyQt5.QtGui import QColor
 
 class Setting:
-    settingDefault = {'X' : 1320, 'Y' : 850, 'W' : 600, 'H' : 300, 'TP' : 0.5, 'format' : 'hh:mm'}
-    settingMinMax  = {'X' : [0, 9999], 'Y' : [0, 9999], 'W' : [0, 9999], 'H' : [0, 9999], 'TP' : [0, 1], 'format' : ['hh:mm:ss', 'hh:mm']}
+    settingDefault = {
+        'X' : 1320,
+        'Y' : 850,
+        'W' : 600,
+        'H' : 300,
+        'TP' : 0.5,
+        'CL' : QColor(Qt.darkCyan).rgb(),
+        'FM' : 'hh:mm'
+    }
+    settingMinMax  = {
+        'X' : [0, 9999],
+        'Y' : [0, 9999],
+        'W' : [0, 9999],
+        'H' : [0, 9999],
+        'TP' : [0.0, 1.0],
+        'CL' : [QColor(0,0,0).rgb(), QColor(255,255,255).rgb()],
+        'FM' : ['hh:mm:ss', 'hh:mm']
+    }
 
     def SettingSave(self):
+        # print('SettingSave')
         try:
             with open('setting.json', 'w', encoding = 'utf8') as file:
                 setting = dict()
@@ -17,26 +35,30 @@ class Setting:
                 setting['W'] = self.W
                 setting['H'] = self.H
                 setting['TP'] = self.TP
-                setting['format'] = self.format
+                setting['CL'] = self.CL
+                setting['FM'] = self.FM
                 json.dump(setting, file)
+                # print(setting)
         except Exception as identifier:
             print(identifier)
-            # self.PaintStatusBar(identifier)
             pass
         
     def SettingLoadOne(self, setting, name, continued):
         if continued:
-            if name not in setting or type(setting[name]) != int or setting[name] < self.settingMinMax[name][0] or setting[name] > self.settingMinMax[name][1]:
+            if name not in setting or type(setting[name]) != type(self.settingDefault[name]) or setting[name] < self.settingMinMax[name][0] or setting[name] > self.settingMinMax[name][1]:
+                print('%s load bad!' % name)
                 return self.settingDefault[name]
             else:
                 return setting[name]
         else:
             if name not in setting or type(setting[name]) != type(self.settingDefault[name]) or setting[name] not in self.settingMinMax[name]:
+                print('%s load bad!' % name)
                 return self.settingDefault[name]
             else:
                 return setting[name]
 
     def SettingLoad(self):
+        print('SettingLoad')
         try:
             with open('setting.json', 'r', encoding = 'utf8') as file:
                 setting = json.loads(file.read())
@@ -45,7 +67,9 @@ class Setting:
                 self.W = self.SettingLoadOne(setting, 'W', True)
                 self.H = self.SettingLoadOne(setting, 'H', True)
                 self.TP = self.SettingLoadOne(setting, 'TP', True)
-                self.format = self.SettingLoadOne(setting, 'format', False)
+                self.CL = self.SettingLoadOne(setting, 'CL', True)
+                self.FM = self.SettingLoadOne(setting, 'FM', False)
+                print(setting)
         except Exception as identifier:
             print('setting.json error!')
             print(identifier)
@@ -54,9 +78,76 @@ class Setting:
             self.W = self.settingDefault['W']
             self.H = self.settingDefault['H']
             self.TP = self.settingDefault['TP']
-            self.format = self.settingDefault['format']
-            # self.PaintStatusBar(identifier)
+            self.CL = self.settingDefault['CL']
+            self.FM = self.settingDefault['FM']
+
+    def SettingDialog(self):
+        from PyQt5.QtWidgets import (QDialog, QSpinBox, QComboBox, QDialogButtonBox, QFormLayout, QColorDialog, QPushButton)
+
+        dialog = self.dialog = QDialog()
+
+        boxX = QSpinBox(dialog)
+        boxX.setRange(0, 100000)
+        boxX.setValue(self.X)
+        boxY = QSpinBox(dialog)
+        boxY.setRange(0, 100000)
+        boxY.setValue(self.Y)
+        boxW = QSpinBox(dialog)
+        boxW.setRange(0, 100000)
+        boxW.setValue(self.W)
+        boxH = QSpinBox(dialog)
+        boxH.setRange(0, 100000)
+        boxH.setValue(self.H)
         
+        boxTP = QSpinBox(dialog)
+        boxTP.setRange(0, 100)
+        boxTP.setValue(self.TP*100)
+
+        # print(self.CL)
+        self.buttonColorVal = QColor(self.CL)
+        # print(self.buttonColorVal.rgb())
+        self.buttonColor = QPushButton(parent = dialog)
+        self.buttonColor.setStyleSheet('QWidget {background-color:%s}' % self.buttonColorVal.name())
+        def ChangeCol():
+            qcd = QColorDialog(dialog)
+            qcd.setWindowTitle('颜色选择')
+            qcd.setCurrentColor(self.buttonColorVal)
+            if qcd.exec() == QDialog.Accepted:
+                self.buttonColorVal = qcd.selectedColor()
+                self.buttonColor.setStyleSheet('QWidget {background-color:%s}' % self.buttonColorVal.name())
+        self.buttonColor.clicked.connect(ChangeCol)
+
+        boxFM = QComboBox(dialog)
+        boxFM.addItems(self.settingMinMax['FM'])
+        boxFM.setCurrentIndex(boxFM.findText(self.FM))
+
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, dialog);
+        buttonBox.accepted.connect(dialog.accept)
+        buttonBox.rejected.connect(dialog.reject)
+
+        form = QFormLayout(dialog)
+        form.addRow(QLabel("设置:"))
+        form.addRow("坐标X:", boxX)
+        form.addRow("坐标Y:", boxY)
+        form.addRow("大小W:", boxW)
+        form.addRow("大小H:", boxH)
+        form.addRow("透明度:", boxTP)
+        form.addRow("颜色:", self.buttonColor)
+        form.addRow("格式:", boxFM)
+        form.addRow(buttonBox)
+
+        if dialog.exec() == QDialog.Accepted:
+            self.X = boxX.value()
+            self.Y = boxY.value()
+            self.W = boxW.value()
+            self.H = boxH.value()
+            self.TP = boxTP.value()/100.0
+            self.CL = self.buttonColorVal.rgb()
+            self.FM = boxFM.currentText()
+            return True
+        else:
+            return False
+
     # def SettingDialog(self, ui):
     #     from PyQt5.QtWidgets import (QDialog, QSpinBox, QComboBox, QDialogButtonBox, QFormLayout)
     #     dialog = QDialog(ui)
