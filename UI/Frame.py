@@ -75,30 +75,6 @@ class Frame(QWidget, Setting):
         import win32con
         win32gui.SetWindowPos(self.hwnd, win32con.HWND_TOPMOST, 0,0,0,0, win32con.SWP_NOMOVE | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
 
-    def eventFilter(self, obj, event):
-        if obj == self and event.type() == QEvent.WindowDeactivate:
-            print('有效')
-            self.activateWindow()
-        return QWidget.eventFilter(self, obj, event)
-        # if(obj == this && ev->type() == QEvent::WindowDeactivate)   //如果本窗口要被遮盖了
-        # {
-        #     qDebug() << "配置窗口将被掩盖，重新拉回最前";
-        #     activateWindow();   //窗口拉回最前
-        # }
-        # if obj == self.text_editor:
-        #     if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
-        #         self.close()
-        #         return True  # 说明这个事件已被处理，其他控件别插手
-
-        # return QObject.eventFilter(self, obj, event)  # 交由其他控件处理
-
-    # 置顶
-    def paintEvent(self, event):
-        import win32gui
-        import win32con
-        # win32gui.SetWindowPos(self.hwnd, win32con.HWND_TOPMOST, 0,0,0,0, win32con.SWP_NOMOVE | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
-
-
     def SettingChange(self):
         if self.inSetting:
             self.tray.showMessage(u"错误", '正在修改设置中', icon=3) # icon的值  0没有图标  1是提示  2是警告  3是错误
@@ -117,13 +93,6 @@ class Frame(QWidget, Setting):
         self.tray.setIcon(QIcon(r'./Icon.ico'))
         # 提示信息
         self.tray.setToolTip(u'桌面时钟')
-        # 托盘创建出来时显示的信息   
-        # self.tray.showMessage(u"打开", '托盘信息内容', icon=1) # icon的值  0没有图标  1是提示  2是警告  3是错误
-                    
-        # 弹出的信息被点击就会调用messageClicked连接的函数
-        # self.tray.messageClicked.connect(message)
-        # 托盘图标被激活，
-        # self.tray.activated.connect(iconActivated)
 
         # 创建托盘的右键菜单
         menu = QMenu()

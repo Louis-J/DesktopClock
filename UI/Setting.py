@@ -103,9 +103,7 @@ class Setting:
         boxTP.setRange(0, 100)
         boxTP.setValue(self.TP*100)
 
-        # print(self.CL)
         self.buttonColorVal = QColor(self.CL)
-        # print(self.buttonColorVal.rgb())
         self.buttonColor = QPushButton(parent = dialog)
         self.buttonColor.setStyleSheet('QWidget {background-color:%s}' % self.buttonColorVal.name())
         def ChangeCol():
@@ -147,28 +145,3 @@ class Setting:
             return True
         else:
             return False
-
-    # def SettingDialog(self, ui):
-    #     from PyQt5.QtWidgets import (QDialog, QSpinBox, QComboBox, QDialogButtonBox, QFormLayout)
-    #     dialog = QDialog(ui)
-    #     boxDifficult = QSpinBox(dialog)
-    #     boxDifficult.setRange(1, 5)
-    #     boxDifficult.setValue(self.Difficult)
-
-    #     boxWhoFirst = QComboBox(dialog)
-    #     boxWhoFirst.addItems(['player', 'AI', 'random'])
-    #     boxWhoFirst.setCurrentIndex(boxWhoFirst.findText(self.WhoFirst))
-
-    #     buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, dialog);
-
-    #     form = QFormLayout(dialog)
-    #     form.addRow(QLabel("设置:"))
-    #     form.addRow("难度(1-5):", boxDifficult)
-    #     form.addRow("先手:", boxWhoFirst)
-    #     form.addRow(buttonBox)
-
-    #     buttonBox.accepted.connect(dialog.accept)
-    #     buttonBox.rejected.connect(dialog.reject)
-    #     if dialog.exec() == QDialog.Accepted:
-    #         self.Difficult = boxDifficult.value()
-    #         self.WhoFirst = boxWhoFirst.currentText()
