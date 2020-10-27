@@ -1,10 +1,9 @@
-import os
 import sys
+
 from .Setting import Setting
 from .Ui_Frame import Ui_Frame
-from PyQt5.QtCore import Qt, QTimer, QTime, QEvent
-from PyQt5.QtWidgets import QWidget, QLCDNumber
 
+from PyQt5.QtCore import Qt, QTimer, QTime
 from PyQt5.QtWidgets import QWidget, QMenu, QSystemTrayIcon, QAction
 from PyQt5.QtGui import QIcon, QColor
 
@@ -90,7 +89,11 @@ class Frame(QWidget, Setting):
     # 托盘
     def Tray(self):
         self.tray = QSystemTrayIcon(self) # 创建托盘
-        self.tray.setIcon(QIcon(r'./Icon.ico'))
+
+        if hasattr(sys, "_MEIPASS"):
+            self.tray.setIcon(QIcon(sys._MEIPASS + r'/Icon.ico'))
+        else:
+            self.tray.setIcon(QIcon(r'./Icon.ico'))
         # 提示信息
         self.tray.setToolTip(u'桌面时钟')
 

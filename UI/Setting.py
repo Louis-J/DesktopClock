@@ -1,9 +1,9 @@
-import json
-import os
 import sys
+import json
+
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QWidget, QLCDNumber, QSlider, QVBoxLayout, QApplication, QWidget, QApplication, QPushButton, QMessageBox, QLabel, QDialog, QColorDialog)
-from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QPushButton, QLabel, QDialog, QColorDialog
+from PyQt5.QtGui import QIcon, QColor
 
 class Setting:
     settingDefault = {
@@ -82,15 +82,20 @@ class Setting:
             self.FM = self.settingDefault['FM']
 
     def SettingDialog(self):
-        from PyQt5.QtWidgets import (QDialog, QSpinBox, QComboBox, QDialogButtonBox, QFormLayout, QColorDialog, QPushButton)
+        from PyQt5.QtWidgets import (QDialog, QSpinBox, QComboBox, QDialogButtonBox, QFormLayout, QColorDialog, QPushButton, QSizePolicy)
 
         dialog = self.dialog = QDialog()
+        dialog.setWindowTitle('设置')
+        if hasattr(sys, "_MEIPASS"):
+            dialog.setWindowIcon(QIcon(sys._MEIPASS + r'/Icon.ico'))
+        else:
+            dialog.setWindowIcon(QIcon(r'./Icon.ico'))
 
         boxX = QSpinBox(dialog)
-        boxX.setRange(0, 100000)
+        boxX.setRange(-100000, 100000)
         boxX.setValue(self.X)
         boxY = QSpinBox(dialog)
-        boxY.setRange(0, 100000)
+        boxY.setRange(-100000, 100000)
         boxY.setValue(self.Y)
         boxW = QSpinBox(dialog)
         boxW.setRange(0, 100000)
@@ -133,6 +138,8 @@ class Setting:
         form.addRow("颜色:", self.buttonColor)
         form.addRow("格式:", boxFM)
         form.addRow(buttonBox)
+
+        dialog.setFixedSize(dialog.sizeHint())
 
         if dialog.exec() == QDialog.Accepted:
             self.X = boxX.value()
