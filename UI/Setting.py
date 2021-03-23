@@ -26,7 +26,6 @@ class Setting:
     }
 
     def SettingSave(self):
-        # print('SettingSave')
         try:
             with open('setting.json', 'w', encoding = 'utf8') as file:
                 setting = dict()
@@ -38,9 +37,8 @@ class Setting:
                 setting['CL'] = self.CL
                 setting['FM'] = self.FM
                 json.dump(setting, file)
-                # print(setting)
         except Exception as identifier:
-            print(identifier)
+            print(('setting.json save error!', identifier))
             pass
         
     def SettingLoadOne(self, setting, name, continued):
@@ -58,7 +56,6 @@ class Setting:
                 return setting[name]
 
     def SettingLoad(self):
-        print('SettingLoad')
         try:
             with open('setting.json', 'r', encoding = 'utf8') as file:
                 setting = json.loads(file.read())
@@ -69,10 +66,8 @@ class Setting:
                 self.TP = self.SettingLoadOne(setting, 'TP', True)
                 self.CL = self.SettingLoadOne(setting, 'CL', True)
                 self.FM = self.SettingLoadOne(setting, 'FM', False)
-                print(setting)
         except Exception as identifier:
-            print('setting.json error!')
-            print(identifier)
+            print(('setting.json load error!', identifier))
             self.X = self.settingDefault['X']
             self.Y = self.settingDefault['Y']
             self.W = self.settingDefault['W']
@@ -81,7 +76,7 @@ class Setting:
             self.CL = self.settingDefault['CL']
             self.FM = self.settingDefault['FM']
 
-    def SettingDialog(self):
+    def SettingDialog(self, ApplyChange):
         from PyQt5.QtWidgets import (QDialog, QSpinBox, QComboBox, QDialogButtonBox, QFormLayout, QColorDialog, QPushButton, QSizePolicy)
 
         dialog = self.dialog = QDialog()
@@ -124,9 +119,20 @@ class Setting:
         boxFM.addItems(self.settingMinMax['FM'])
         boxFM.setCurrentIndex(boxFM.findText(self.FM))
 
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, dialog);
+        def Apply():
+            self.X = boxX.value()
+            self.Y = boxY.value()
+            self.W = boxW.value()
+            self.H = boxH.value()
+            self.TP = boxTP.value()/100.0
+            self.CL = self.buttonColorVal.rgb()
+            self.FM = boxFM.currentText()
+            ApplyChange()
+            
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Apply | QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, dialog)
         buttonBox.accepted.connect(dialog.accept)
         buttonBox.rejected.connect(dialog.reject)
+        buttonBox.button(QDialogButtonBox.Apply).clicked.connect(Apply)
 
         form = QFormLayout(dialog)
         form.addRow(QLabel("设置:"))
@@ -142,13 +148,4 @@ class Setting:
         dialog.setFixedSize(dialog.sizeHint())
 
         if dialog.exec() == QDialog.Accepted:
-            self.X = boxX.value()
-            self.Y = boxY.value()
-            self.W = boxW.value()
-            self.H = boxH.value()
-            self.TP = boxTP.value()/100.0
-            self.CL = self.buttonColorVal.rgb()
-            self.FM = boxFM.currentText()
-            return True
-        else:
-            return False
+            Apply()

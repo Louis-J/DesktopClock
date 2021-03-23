@@ -1,4 +1,5 @@
 import sys
+import platform
 
 from .Setting import Setting
 from .Ui_Frame import Ui_Frame
@@ -11,6 +12,10 @@ from PyQt5.QtGui import QIcon, QColor
 class Frame(QWidget, Setting):
     def __init__(self, parent=None):
         QWidget.__init__(self)
+        self.platformstr = platform.system()
+        if self.platformstr == "Linux":
+            import os
+            os.chdir(os.path.dirname(sys.argv[0]))
         self.SettingLoad()
         self.inSetting = False
         self.setGeometry(self.X, self.Y, self.W, self.H)
@@ -26,9 +31,10 @@ class Frame(QWidget, Setting):
         self.timer.timeout.connect(self.ShowLcd)
         self.ShowLcd()
 
-        self.timerT = QTimer(self)
-        self.timerT.timeout.connect(self.TopMost)
-        self.timerT.start(10)
+        if self.platformstr == "Windows":
+            self.timerT = QTimer(self)
+            self.timerT.timeout.connect(self.TopMost)
+            self.timerT.start(10)
 
         # 解决无法关闭QAPP的问题
         self.setAttribute(Qt.WA_QuitOnClose, True)
@@ -37,7 +43,6 @@ class Frame(QWidget, Setting):
         if self.inSetting:
             self.tray.showMessage(u"错误", '用户正在修改设置中, 无法退出', icon=3) # icon的值  0没有图标  1是提示  2是警告  3是错误
         else:
-            print(self.geometry())
             self.SettingSave()
             del self.ui
             # python不保证析构, 因此托盘可能无法消失, 需要手动hide
@@ -49,15 +54,19 @@ class Frame(QWidget, Setting):
     def TransParent(self):
         self.setWindowOpacity(self.TP) # 控件透明
         self.setAttribute(Qt.WA_TranslucentBackground, True) # 窗口透明
-        self.setWindowFlags(self.windowFlags() | Qt.Tool | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
         self.setFocusPolicy(Qt.NoFocus) # 无焦点
 
-        # 鼠标穿透，必须后于前几项
-        import win32gui
-        import win32con
-        self.hwnd = int(self.winId())
-        win32gui.SetWindowLong(self.hwnd, win32con.GWL_EXSTYLE, win32gui.GetWindowLong(self.hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_TRANSPARENT | win32con.WS_EX_LAYERED | win32con.WS_EX_NOACTIVATE);
-        
+        if self.platformstr == "Linux":
+            self.setAttribute(Qt.WA_TransparentForMouseEvents, True) # 鼠标穿透, 必须放在前面
+            self.setWindowFlags(self.windowFlags() | Qt.Tool | Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint)
+
+        if self.platformstr == "Windows":
+            self.setWindowFlags(self.windowFlags() | Qt.Tool | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+            import win32gui
+            import win32con
+            self.hwnd = int(self.winId())
+            win32gui.SetWindowLong(self.hwnd, win32con.GWL_EXSTYLE, win32gui.GetWindowLong(self.hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_TRANSPARENT | win32con.WS_EX_LAYERED | win32con.WS_EX_NOACTIVATE);
+
     # 更新时间
     def ShowLcd(self):
         timev = QTime.currentTime()
@@ -70,9 +79,15 @@ class Frame(QWidget, Setting):
         # self.update()
 
     def TopMost(self):
-        import win32gui
-        import win32con
-        win32gui.SetWindowPos(self.hwnd, win32con.HWND_TOPMOST, 0,0,0,0, win32con.SWP_NOMOVE | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
+        if self.platformstr == "Windows":
+            import win32gui
+            import win32con
+            win32gui.SetWindowPos(self.hwnd, win32con.HWND_TOPMOST, 0,0,0,0, win32con.SWP_NOMOVE | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
+
+    def ApplyChange(self):
+        self.setGeometry(self.X, self.Y, self.W, self.H)
+        self.setWindowOpacity(self.TP)
+        self.ui.setupLcdColor(QColor(self.CL))
 
     def SettingChange(self):
         if self.inSetting:
@@ -80,10 +95,7 @@ class Frame(QWidget, Setting):
         else:
             self.inSetting = True
             from PyQt5.QtGui import QColor
-            if self.SettingDialog():
-                self.setGeometry(self.X, self.Y, self.W, self.H)
-                self.setWindowOpacity(self.TP)
-                self.ui.setupLcdColor(QColor(self.CL))
+            self.SettingDialog(self.ApplyChange)
             self.inSetting = False
             
     # 托盘
