@@ -128,8 +128,12 @@ class Setting:
             self.CL = self.buttonColorVal.rgb()
             self.FM = boxFM.currentText()
             ApplyChange()
+            self.SettingSave()
             
         buttonBox = QDialogButtonBox(QDialogButtonBox.Apply | QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal, dialog)
+        buttonBox.button(QDialogButtonBox.Apply).setText("应用")
+        buttonBox.button(QDialogButtonBox.Ok).setText("确定")
+        buttonBox.button(QDialogButtonBox.Cancel).setText("取消")
         buttonBox.accepted.connect(dialog.accept)
         buttonBox.rejected.connect(dialog.reject)
         buttonBox.button(QDialogButtonBox.Apply).clicked.connect(Apply)

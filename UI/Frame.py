@@ -43,7 +43,6 @@ class Frame(QWidget, Setting):
         if self.inSetting:
             self.tray.showMessage(u"错误", '用户正在修改设置中, 无法退出', icon=3) # icon的值  0没有图标  1是提示  2是警告  3是错误
         else:
-            self.SettingSave()
             del self.ui
             # python不保证析构, 因此托盘可能无法消失, 需要手动hide
             self.tray.hide()
