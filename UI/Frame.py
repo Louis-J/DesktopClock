@@ -1,7 +1,7 @@
 import sys
 import platform
 
-from .Setting import Setting
+from .Settings import Settings
 from .Ui_Frame import Ui_Frame
 
 from PyQt5.QtCore import Qt, QTimer, QTime
@@ -9,20 +9,20 @@ from PyQt5.QtWidgets import QWidget, QMenu, QSystemTrayIcon, QAction
 from PyQt5.QtGui import QIcon, QColor
 
 # 窗口程序
-class Frame(QWidget, Setting):
+class Frame(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self)
         self.platformstr = platform.system()
         if self.platformstr == "Linux":
             import os
             os.chdir(os.path.dirname(sys.argv[0]))
-        self.SettingLoad()
+        self.settings = Settings()
         self.inSetting = False
-        self.setGeometry(self.X, self.Y, self.W, self.H)
+        self.setGeometry(self.settings.X, self.settings.Y, self.settings.W, self.settings.H)
 
         self.Tray()
         self.ui = Ui_Frame()
-        self.ui.setupUi(self, QColor(self.CL))
+        self.ui.setupUi(self, QColor(self.settings.CL))
         
         self.dftFlag = self.windowFlags()
         self.TransParent()
@@ -56,8 +56,17 @@ class Frame(QWidget, Setting):
         self.setFocusPolicy(Qt.NoFocus) # 无焦点
 
         if self.platformstr == "Linux":
-            self.setAttribute(Qt.WA_TransparentForMouseEvents, True) # 鼠标穿透, 必须放在前面
-            self.setWindowFlags(self.windowFlags() | Qt.Tool | Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint)
+            # self.setAttribute(Qt.WA_TransparentForMouseEvents, True) # 鼠标穿透, 必须放在前面
+            self.setWindowFlags(self.windowFlags() | Qt.WindowTransparentForInput | Qt.ToolTip)
+            self.setAttribute(Qt.WA_NoChildEventsForParent, True)
+            # Qt.XShapeCombineRectangles(QX11Info::display(), winId(), ShapeInput, 0, 0, NULL, 0, ShapeSet, YXBanded);
+            
+            # self.setWindowFlags(self.windowFlags() | Qt.WindowTransparentForInput | Qt.ToolTip)
+            # self.setAttribute(Qt.WA_TranslucentBackground)
+            # self.setWindowFlags(self.windowFlags() | Qt.Tool | Qt.X11BypassWindowManagerHint | Qt.FramelessWindowHint)
+            # self.setWindowFlags(self.windowFlags() | Qt.Tool | Qt.BypassWindowManagerHint | Qt.FramelessWindowHint)
+            self.setWindowFlags(self.windowFlags() | Qt.Tool | Qt.BypassWindowManagerHint)
+            pass
 
         if self.platformstr == "Windows":
             self.setWindowFlags(self.windowFlags() | Qt.Tool | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
@@ -84,9 +93,9 @@ class Frame(QWidget, Setting):
             win32gui.SetWindowPos(self.hwnd, win32con.HWND_TOPMOST, 0,0,0,0, win32con.SWP_NOMOVE | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
 
     def ApplyChange(self):
-        self.setGeometry(self.X, self.Y, self.W, self.H)
-        self.setWindowOpacity(self.TP)
-        self.ui.setupLcdColor(QColor(self.CL))
+        self.setGeometry(self.settings.X, self.settings.Y, self.settings.W, self.settings.H)
+        self.setWindowOpacity(self.settings.TP)
+        self.ui.setupLcdColor(QColor(self.settings.CL))
 
     def SettingChange(self):
         if self.inSetting:

@@ -1,6 +1,6 @@
 import sys
 from .Frame import Frame
-from PyQt5.QtWidgets import (QApplication)
+from PyQt5.QtWidgets import QApplication
 
 
 class UI:
