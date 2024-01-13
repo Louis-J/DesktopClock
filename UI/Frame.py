@@ -4,9 +4,9 @@ import platform
 from .Settings import Settings
 from .Ui_Frame import Ui_Frame
 
-from PyQt5.QtCore import Qt, QTimer, QTime
-from PyQt5.QtWidgets import QWidget, QMenu, QSystemTrayIcon, QAction
-from PyQt5.QtGui import QIcon, QColor
+from PySide6.QtCore import Qt, QTimer, QTime
+from PySide6.QtWidgets import QWidget, QMenu, QSystemTrayIcon
+from PySide6.QtGui import QIcon, QColor, QAction
 
 # 窗口程序
 class Frame(QWidget):
@@ -15,14 +15,15 @@ class Frame(QWidget):
         self.platformstr = platform.system()
         if self.platformstr == "Linux":
             import os
-            os.chdir(os.path.dirname(sys.argv[0]))
+            os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
         self.settings = Settings()
         self.inSetting = False
         self.setGeometry(self.settings.X, self.settings.Y, self.settings.W, self.settings.H)
 
         self.Tray()
         self.ui = Ui_Frame()
-        self.ui.setupUi(self, QColor(self.settings.CL))
+        self.ui.setupUi(self)
+        self.ui.setupLcdColor(QColor(self.settings.CL))
         
         self.dftFlag = self.windowFlags()
         self.TransParent()
@@ -51,7 +52,8 @@ class Frame(QWidget):
 
     # 窗口初始设置
     def TransParent(self):
-        self.setWindowOpacity(self.TP) # 控件透明
+        # will change the radio of setGeometry
+        self.setWindowOpacity(self.settings.TP) # 控件透明
         self.setAttribute(Qt.WA_TranslucentBackground, True) # 窗口透明
         self.setFocusPolicy(Qt.NoFocus) # 无焦点
 
@@ -81,7 +83,7 @@ class Frame(QWidget):
         time = timev.addMSecs(500)
         nextTime = (1500 - (time.msec()) % 1000)
 
-        text = time.toString(self.FM)
+        text = time.toString(self.settings.FM)
         self.ui.lcdNumber.display(text)
         self.timer.start(nextTime)
         # self.update()
@@ -102,8 +104,7 @@ class Frame(QWidget):
             self.tray.showMessage(u"错误", '正在修改设置中', icon=3) # icon的值  0没有图标  1是提示  2是警告  3是错误
         else:
             self.inSetting = True
-            from PyQt5.QtGui import QColor
-            self.SettingDialog(self.ApplyChange)
+            self.settings.SettingDialog(self.ApplyChange)
             self.inSetting = False
             
     # 托盘
