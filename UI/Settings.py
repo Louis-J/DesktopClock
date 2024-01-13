@@ -3,9 +3,9 @@ import sys
 import json
 from typing import Any
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QPushButton, QLabel, QDialog, QColorDialog
-from PyQt5.QtGui import QIcon, QColor
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialog, QLabel, QSpinBox, QComboBox, QDialogButtonBox, QFormLayout, QColorDialog, QPushButton, QTextEdit
+from PySide6.QtGui import QIcon, QColor
 
 SettingKeyType = namedtuple('SettingKeyType', ('type', 'range', 'defaultValue'))
 class Settings:
@@ -24,10 +24,10 @@ class Settings:
         try:
             with open('setting.json', 'r', encoding = 'utf8') as file:
                 settingJson = json.loads(file.read())
-                self.settings = {k: self.SettingLoadOne(settingJson, k, True) for k in Settings.settingKey}
+                self.settings = {k: self.SettingLoadOne(settingJson, k, True) for k in Settings.settingKeys}
         except Exception as identifier:
             print(('setting.json load error!', identifier))
-            self.settings = {k: v[-1] for k, v in Settings.settingKey.items()}
+            self.settings = {k: v[-1] for k, v in Settings.settingKeys.items()}
 
     def __getattr__(self, __name: str) -> Any:
         return self.settings[__name]
@@ -61,8 +61,6 @@ class Settings:
 
 
     def SettingDialog(self, ApplyChange):
-        from PyQt5.QtWidgets import (QDialog, QSpinBox, QComboBox, QDialogButtonBox, QFormLayout, QColorDialog, QPushButton, QSizePolicy)
-
         dialog = self.dialog = QDialog()
         dialog.setWindowTitle('设置')
         if hasattr(sys, "_MEIPASS"):
