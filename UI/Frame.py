@@ -1,7 +1,8 @@
 import sys
 import platform
 
-from .Settings import Settings
+from .SettingsUtils import load_settings_dict, save_settings_dict
+from .TimeSettings import TimeSettingsUnit
 from .Ui_Frame import Ui_Frame
 
 from PySide6.QtCore import Qt, QTimer, QTime
@@ -16,14 +17,15 @@ class Frame(QWidget):
         if self.platformstr == "Linux":
             import os
             os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
-        self.settings = Settings()
+        self.all_setting_dict = load_settings_dict()
+        self.time_settings = TimeSettingsUnit(self.all_setting_dict.get('time_settings', {}))
         self.inSetting = False
-        self.setGeometry(self.settings.X, self.settings.Y, self.settings.W, self.settings.H)
+        self.setGeometry(self.time_settings.x, self.time_settings.y, self.time_settings.w, self.time_settings.h)
 
         self.Tray()
         self.ui = Ui_Frame()
         self.ui.setupUi(self)
-        self.ui.setupLcdColor(QColor(self.settings.CL))
+        self.ui.setupLcdColor(QColor(self.time_settings.timeColor))
         
         self.dftFlag = self.windowFlags()
         self.TransParent()
@@ -53,7 +55,7 @@ class Frame(QWidget):
     # 窗口初始设置
     def TransParent(self):
         # will change the radio of setGeometry
-        self.setWindowOpacity(self.settings.TP) # 控件透明
+        self.setWindowOpacity(self.time_settings.transparent / 100.0) # 控件透明
         self.setAttribute(Qt.WA_TranslucentBackground, True) # 窗口透明
         self.setFocusPolicy(Qt.NoFocus) # 无焦点
 
@@ -83,7 +85,7 @@ class Frame(QWidget):
         time = timev.addMSecs(500)
         nextTime = (1500 - (time.msec()) % 1000)
 
-        text = time.toString(self.settings.FM)
+        text = time.toString(self.time_settings.timeFormat)
         self.ui.lcdNumber.display(text)
         self.timer.start(nextTime)
         # self.update()
@@ -95,16 +97,18 @@ class Frame(QWidget):
             win32gui.SetWindowPos(self.hwnd, win32con.HWND_TOPMOST, 0,0,0,0, win32con.SWP_NOMOVE | win32con.SWP_SHOWWINDOW | win32con.SWP_NOSIZE | win32con.SWP_NOACTIVATE)
 
     def ApplyChange(self):
-        self.setGeometry(self.settings.X, self.settings.Y, self.settings.W, self.settings.H)
-        self.setWindowOpacity(self.settings.TP)
-        self.ui.setupLcdColor(QColor(self.settings.CL))
+        self.all_setting_dict['time_settings'] = self.time_settings.asdict()
+        save_settings_dict(self.all_setting_dict)
+        self.setGeometry(self.time_settings.x, self.time_settings.y, self.time_settings.w, self.time_settings.h)
+        self.setWindowOpacity(self.time_settings.transparent / 100.0)
+        self.ui.setupLcdColor(QColor(self.time_settings.timeColor))
 
     def SettingChange(self):
         if self.inSetting:
-            self.tray.showMessage(u"错误", '正在修改设置中', icon=3) # icon的值  0没有图标  1是提示  2是警告  3是错误
+            self.tray.showMessage(u"错误", '正在修改设置中', QSystemTrayIcon.MessageIcon.Warning) # icon的值  0没有图标  1是提示  2是警告  3是错误
         else:
             self.inSetting = True
-            self.settings.SettingDialog(self.ApplyChange)
+            self.time_settings.settingsDialog(self, self.ApplyChange)
             self.inSetting = False
             
     # 托盘
