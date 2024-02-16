@@ -3,10 +3,13 @@ import sys
 import traceback
 from recordclass import RecordClass
 from typing import Any, List, Tuple, Type
+import logging
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLabel, QSpinBox, QComboBox, QDialogButtonBox, QFormLayout, QColorDialog, QPushButton, QTextEdit
 from PySide6.QtGui import QIcon, QColor
+
+logger = logging.getLogger(__name__)
 
 class SettingType(RecordClass):
     hint: str
@@ -44,7 +47,7 @@ class QColorPushButton(QPushButton):
         self.color_value = QColor(color_rgb)
         self.setStyleSheet('QWidget {background-color:%s}' % self.color_value.name())
         self.clicked.connect(self.changeColor)
-    
+
     def changeColor(self):
         qcd = QColorDialog(self.parent)
         qcd.setWindowTitle('颜色选择')
@@ -117,9 +120,10 @@ def load_settings_dict():
     try:
         with open('setting.json', 'r', encoding = 'utf8') as file:
             return json.loads(file.read())
-    except:
-        print('setting.json load error! except:')
-        traceback.print_exception(*sys.exc_info())
+    except Exception as identifier:
+        logger.error('load_settings_dict got exception!')
+        logger.error('except msg: %s', identifier)
+        logger.error('except frame: %s', traceback.format_exception(*sys.exc_info()))
         return {}
 
 def save_settings_dict(obj_dict):
@@ -127,7 +131,9 @@ def save_settings_dict(obj_dict):
         with open('setting.json', 'w', encoding = 'utf8') as file:
             json.dump(obj_dict, file)
     except Exception as identifier:
-        print(('setting.json save error!', identifier))
+        logger.error('save_settings_dict got exception!')
+        logger.error('except msg: %s', identifier)
+        logger.error('except frame: %s', traceback.format_exception(*sys.exc_info()))
         pass
 
 
@@ -138,12 +144,12 @@ class SettingsUnit:
         for key, type in collection_type.__annotations__.items():
             type: SettingType
             if key not in setting_obj:
-                print(f'{key} load bad! not exist')
+                logger.warn(f'{key} load bad! not exist')
                 setattr(self, key, type.default_value)
                 continue
             value = setting_obj[key]
             if not type.checkValueValid(value):
-                print(f'{key} load bad! check invalid for value {value}')
+                logger.warn(f'{key} load bad! check invalid for value {value}')
                 setattr(self, key, type.default_value)
                 continue
             setattr(self, key, value)
