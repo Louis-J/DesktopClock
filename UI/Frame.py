@@ -1,5 +1,6 @@
 import sys
 import platform
+import logging
 
 from .SettingsUtils import load_settings_dict, save_settings_dict
 from .TimeSettings import TimeSettingsUnit
@@ -8,6 +9,8 @@ from .Ui_Frame import Ui_Frame
 from PySide6.QtCore import Qt, QTimer, QTime
 from PySide6.QtWidgets import QWidget, QMenu, QSystemTrayIcon
 from PySide6.QtGui import QIcon, QColor, QAction
+
+logger = logging.getLogger(__name__)
 
 # 窗口程序
 class Frame(QWidget):
